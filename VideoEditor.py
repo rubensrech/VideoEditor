@@ -2,6 +2,7 @@ import numpy as np
 import cv2 as cv
 
 from Window import Window, WindowWithTrackbar
+from FrameProcessing import Operation, setOperationFlags, processFrame
 
 def onTrackbarChange(val):
     print(val)
@@ -13,6 +14,8 @@ processedWindow = WindowWithTrackbar("Processed video stream", "Value:", 50)
 # Open the default camera, use something different from 0 otherwise
 camera = 0
 cap = cv.VideoCapture(camera)
+
+opFlags = Operation.Color
 
 while cap.isOpened():
     # Read the input video stream
@@ -26,10 +29,13 @@ while cap.isOpened():
 
     # Set operation flags according to the key pressed
     opKey = cv.waitKey(1)
-    if opKey == 27: break
+    op = Operation.fromKey(opKey)
+    if op == Operation.Exit: break;
+    opFlags = setOperationFlags(opFlags, op)
 
     # Process input stream
-    processedFrame = originalFrame
+    arg = processedWindow.getTrackbarValue()
+    processedFrame = processFrame(originalFrame, opFlags, arg)
 
     # Show processed video stream
     processedWindow.showFrame(processedFrame)
