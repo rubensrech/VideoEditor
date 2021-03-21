@@ -1,4 +1,5 @@
 #include <opencv2/opencv.hpp>
+using namespace std;
 
 #include <iostream>
 #include <string>
@@ -9,7 +10,7 @@ using namespace std;
 #include "windowWithTrackbar.h"
 
 int main(int argc, char **argv) {
-    cv::VideoCapture cap;
+    VideoCapture cap;
 
     // Open the default camera, use something different from 0 otherwise;
     int camera = 0;
@@ -19,8 +20,8 @@ int main(int argc, char **argv) {
     Window originalWindow("Original video stream");
     WindowWithTrackbar processedWindow("Processed video stream", "Value: [0, 50]", 50);
 
-    cv::Mat originalFrame;
-    cv::Mat processedFrame;
+    Mat originalFrame;
+    Mat processedFrame;
 
     bool capturing = true;
     int opFlags = Operation::Color;
@@ -36,7 +37,8 @@ int main(int argc, char **argv) {
         originalWindow.showFrame(originalFrame);
 
         // Set operation flags according to the key pressed
-        Operation op = operationFromKey(cv::waitKey(1));
+        int opKey = waitKey(1);
+        Operation op = operationFromKey(opKey);
         if (op == Operation::Exit) break;
         setOperationFlags(opFlags, op);
 
