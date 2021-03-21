@@ -37,6 +37,22 @@ class Operation(IntFlag):
         elif opKey == 27: return Operation.Exit
         else: return Operation.Invalid
 
+def printOperationsHelp():
+    print("c   : Color (no processing)")
+    print("b   : Blurring (Gaussian blur)")
+    print("o   : cOntrast enhancement")
+    print("d   : graDient (Sobel)")
+    print("e   : Edges (Canny)")
+    print("g   : Grayscale")
+    print("n   : Negative")
+    print("i   : brIghtness enhancement")
+    print("z   : toggle resiZe (1/4 of the original size)")
+    print("t   : roTate")
+    print("r   : toggle Recording")
+    print("h   : toggle flip Horizontally")
+    print("v   : toggle flip Vertically")
+    print("ESC : Exit")
+
 exclusiveOpsMask =  Operation.Color        | \
                     Operation.Blur         | \
                     Operation.Contrast     | \

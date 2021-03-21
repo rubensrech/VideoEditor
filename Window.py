@@ -9,6 +9,9 @@ class Window:
     def showFrame(self, frame):
         cv.imshow(self.name, frame)
 
+    def setPosition(self, x, y):
+        cv.moveWindow(self.name, x, y)
+
 class WindowWithTrackbar(Window):
     def __init__(self, name, trackbarLabel, trackbarMax):
         Window.__init__(self, name)

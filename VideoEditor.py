@@ -1,21 +1,23 @@
+#!/opt/anaconda3/bin/python3
+
 import numpy as np
 import cv2 as cv
 
 from Window import Window, WindowWithTrackbar
-from FrameProcessing import Operation, setOperationFlags, processFrame
-
-def onTrackbarChange(val):
-    print(val)
+from FrameProcessing import Operation, setOperationFlags, processFrame, printOperationsHelp
 
 # Build two windows for showing the original and the processed video stream
 originalWindow = Window("Original video stream")
 processedWindow = WindowWithTrackbar("Processed video stream", "Value:", 50)
+originalWindow.setPosition(0,0)
+processedWindow.setPosition(100,0)
 
 # Open the default camera, use something different from 0 otherwise
 camera = 0
 cap = cv.VideoCapture(camera)
 
 opFlags = Operation.Color
+printOperationsHelp()
 
 while cap.isOpened():
     # Read the input video stream
