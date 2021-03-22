@@ -132,6 +132,9 @@ def processFrame(input, opFlags, arg):
         beta = (arg - 25) * 2.0
         output = adjustBrightness(output, beta)
 
+    if opFlags & Operation.Record:
+        output = drawRecSymbol(output)
+
     return output
 
 def ENSURE_ODD(num):
@@ -140,6 +143,14 @@ def ENSURE_ODD(num):
 def CLAMP(n, minn, maxn):
     return max(min(maxn, n), minn)
 
+def drawRecSymbol(input):
+    position = (10, 30)
+    font = cv.FONT_HERSHEY_SIMPLEX
+    scale = 0.75
+    color = (255,255,255)
+    thick = 2
+    line = cv.LINE_AA
+    return cv.putText(input, 'REC', position, font, scale, color, thick, line)
 
 def gaussianBlur(input, kernelSize = 3):
     kernelSize = ENSURE_ODD(kernelSize)
@@ -147,7 +158,10 @@ def gaussianBlur(input, kernelSize = 3):
 
 def cannyEdges(input, kernelSize = 3, lowThresh = 50, highThresh = 100):
     kernelSize = CLAMP(ENSURE_ODD(kernelSize), 1, 7)
-    return cv.cvtColor(cv.Canny(input, lowThresh, highThresh, kernelSize), cv.COLOR_GRAY2RGB)
+    # canny has 1 channel
+    canny = cv.Canny(input, lowThresh, highThresh, kernelSize)
+    # Return the frame with 3 channels
+    return cv.cvtColor(canny, cv.COLOR_GRAY2RGB)
 
 def sobelGradient(input, kernelSize = 3):
     kernelSize = CLAMP(ENSURE_ODD(kernelSize), 1, 7)
@@ -163,8 +177,11 @@ def sobelGradient(input, kernelSize = 3):
     abs_grad_x = cv.convertScaleAbs(grad_x)
     abs_grad_y = cv.convertScaleAbs(grad_y)
 
-    # Combine the directional gradients
-    return cv.cvtColor(cv.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0), cv.COLOR_GRAY2RGB)
+    # Combine the directional gradients (1 channel)
+    grad = cv.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0)
+
+    # Return the frame with 3 channels
+    return cv.cvtColor(grad, cv.COLOR_GRAY2RGB)
 
 def adjustContrast(input, alpha):
     return cv.convertScaleAbs(input, alpha=alpha)
@@ -176,7 +193,10 @@ def toNegative(input):
     return cv.convertScaleAbs(input, alpha=-1, beta=255)
 
 def toGrayscale(input):
-    return cv.cvtColor(cv.cvtColor(input, cv.COLOR_BGR2GRAY), cv.COLOR_GRAY2RGB)
+    # Convert to grayscale (1 channel)
+    gray = cv.cvtColor(input, cv.COLOR_BGR2GRAY)
+    # Return the frame with 3 channels
+    return cv.cvtColor(gray, cv.COLOR_GRAY2RGB)
 
 def resize(input, sx, sy):
     return cv.resize(input, (0,0), fx=sx, fy=sy)
