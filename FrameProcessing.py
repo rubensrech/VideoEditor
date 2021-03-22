@@ -68,11 +68,30 @@ toggleOpsMask = Operation.Rotate | \
                 Operation.FlipH  | \
                 Operation.FlipV
 
+codec = cv.VideoWriter_fourcc(*'X264')
+videoWriter = None
+
 def setOperationFlags(opFlags, newOp):
     if newOp < 0: return opFlags
 
+    isRecording = opFlags & Operation.Record
+
+    if newOp == Operation.Record:
+        if isRecording:
+            print("Stop rec")
+            # Stop recording
+            global videoWriter
+            if videoWriter is not None:
+                videoWriter.release()
+                videoWriter = None
+            return opFlags ^ Operation.Record
+        else:
+            print("Start rec")
+            # Start recording
+            return opFlags | Operation.Record
+
     # While recording, resize and rotate are not allowed
-    if opFlags & Operation.Record:
+    if isRecording:        
         if newOp == Operation.Rotate: return opFlags
         if newOp == Operation.Resize: return opFlags
 
@@ -118,7 +137,11 @@ def processFrame(input, opFlags, arg):
         output = adjustBrightness(output, beta)
 
     if opFlags & Operation.Record:
-        pass
+        global videoWriter
+        if videoWriter is None:
+            (h, w) = output.shape[:2]
+            videoWriter = cv.VideoWriter('output.mp4', codec, 20.0, (w, h))
+        videoWriter.write(output)
 
     return output
 
@@ -135,7 +158,7 @@ def gaussianBlur(input, kernelSize = 3):
 
 def cannyEdges(input, kernelSize = 3, lowThresh = 50, highThresh = 100):
     kernelSize = CLAMP(ENSURE_ODD(kernelSize), 1, 7)
-    return cv.Canny(input, lowThresh, highThresh, kernelSize)
+    return cv.cvtColor(cv.Canny(input, lowThresh, highThresh, kernelSize), cv.COLOR_GRAY2RGB)
 
 def sobelGradient(input, kernelSize = 3):
     kernelSize = CLAMP(ENSURE_ODD(kernelSize), 1, 7)
@@ -152,7 +175,7 @@ def sobelGradient(input, kernelSize = 3):
     abs_grad_y = cv.convertScaleAbs(grad_y)
 
     # Combine the directional gradients
-    return cv.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0)
+    return cv.cvtColor(cv.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0), cv.COLOR_GRAY2RGB)
 
 def adjustContrast(input, alpha):
     return cv.convertScaleAbs(input, alpha=alpha)
@@ -164,7 +187,7 @@ def toNegative(input):
     return cv.convertScaleAbs(input, alpha=-1, beta=255)
 
 def toGrayscale(input):
-    return cv.cvtColor(input, cv.COLOR_BGR2GRAY)
+    return cv.cvtColor(cv.cvtColor(input, cv.COLOR_BGR2GRAY), cv.COLOR_GRAY2RGB)
 
 def resize(input, sx, sy):
     return cv.resize(input, (0,0), fx=sx, fy=sy)
