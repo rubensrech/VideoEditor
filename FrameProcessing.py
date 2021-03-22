@@ -68,32 +68,28 @@ toggleOpsMask = Operation.Rotate | \
                 Operation.FlipH  | \
                 Operation.FlipV
 
-codec = cv.VideoWriter_fourcc(*'X264')
-videoWriter = None
-
 def setOperationFlags(opFlags, newOp):
-    if newOp < 0: return opFlags
-
+    recordingToggled = False
     isRecording = opFlags & Operation.Record
 
+    if newOp < 0: return opFlags, recordingToggled, isRecording
+
+    # Detect recording toggled
     if newOp == Operation.Record:
+        recordingToggled = True
         if isRecording:
-            print("Stop rec")
             # Stop recording
-            global videoWriter
-            if videoWriter is not None:
-                videoWriter.release()
-                videoWriter = None
-            return opFlags ^ Operation.Record
+            opFlags ^= Operation.Record
         else:
-            print("Start rec")
             # Start recording
-            return opFlags | Operation.Record
+            opFlags |= Operation.Record
+        isRecording = not isRecording
+        return opFlags, recordingToggled, isRecording
 
     # While recording, resize and rotate are not allowed
     if isRecording:        
-        if newOp == Operation.Rotate: return opFlags
-        if newOp == Operation.Resize: return opFlags
+        if newOp == Operation.Rotate: return opFlags, recordingToggled, isRecording
+        if newOp == Operation.Resize: return opFlags, recordingToggled, isRecording
 
     # Operation newOp is exclusive (should disable other exclusive ops)
     if newOp & exclusiveOpsMask:
@@ -106,7 +102,7 @@ def setOperationFlags(opFlags, newOp):
     else:
         opFlags |= newOp
 
-    return opFlags
+    return opFlags, recordingToggled, isRecording
 
 def processFrame(input, opFlags, arg):
     output = input
@@ -135,13 +131,6 @@ def processFrame(input, opFlags, arg):
     if opFlags & Operation.Brightness:
         beta = (arg - 25) * 2.0
         output = adjustBrightness(output, beta)
-
-    if opFlags & Operation.Record:
-        global videoWriter
-        if videoWriter is None:
-            (h, w) = output.shape[:2]
-            videoWriter = cv.VideoWriter('output.mp4', codec, 20.0, (w, h))
-        videoWriter.write(output)
 
     return output
 
