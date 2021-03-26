@@ -1,4 +1,11 @@
-__pycache__
+# Common
 .vscode
 .DS_Store
 *.mp4
+
+# Python
+__pycache__
+
+# C++
+obj
+main
